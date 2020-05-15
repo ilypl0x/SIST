@@ -1,0 +1,175 @@
+<SetPopup>:
+    title:"Confirm Details Below"
+    size_hint: None,None
+    auto_dismiss: False
+    size: (200,200)
+    FloatLayout:
+        Label:
+            id: confirm_label
+            size_hint: 0.6, 0.2
+            pos_hint: {"x":0.2, "top":1}                     
+        Button:         
+            text: "Confirm"
+            on_release:
+                root.dismiss()
+                app.add_transaction()
+                app.blank_input_fields()
+            size_hint: 0.4, 0.2
+            pos_hint: {"x":0, "top":.2}       
+        Button:         
+            text: "Re-Enter"
+            on_release:  
+                root.dismiss() 
+            size_hint: 0.4, 0.2
+            pos_hint: {"right":1, "top":.2}                    
+ 
+<InputScreen>:
+    canvas:
+        Color:
+            rgb: utils.get_color_from_hex("#000000")
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    FloatLayout:
+        FloatLayout:
+            pos_hint: {"top": 1,"left":1}
+            size_hint: 1, .15              
+            ImageButton:
+                source: "icons/back.png"
+                size_hint: (1,.4)
+                pos_hint: {"top":.95,"x":-.4}
+                on_release:
+                    app.blank_input_fields()
+                    app.change_screen("home_screen")  
+                    app.update()                  
+            ImageButton:
+                id: save_button
+                size_hint: (1,.4)
+                pos_hint: {"top":.95,"x":.4}                
+                source: "icons/save.png"
+                on_release:    
+                    app.show_popup()         
+        Label:
+            size_hint: 1, .15
+            pos_hint: {"top": .85, "left":1}             
+            id: submit_error
+            bold: True
+            markup: True
+            halign: "center"
+            valigh: "middle"
+            size_hiny_y: None             
+            text_size: self.width, None
+            height: self.texture_size[1]          
+        GridLayout:
+            cols: 2
+            pos_hint: {"top": .70,"left":1}
+            size_hint: 1, .70
+            FloatLayout:
+                Label:
+                    size_hint: .8, .1
+                    pos_hint: {"top": .9, "right":.9}             
+                    id: ticker_name
+                    bold: True
+                    markup: True
+                    halign: "center"
+                    valigh: "middle"
+                    size_hiny_y: None             
+                    text_size: self.width, None
+                    height: self.texture_size[1]             
+                TextInput:
+                    id: ticker
+                    hint_text: "Enter Ticker"
+                    size_hint: .8, .1
+                    write_tab: False                    
+                    pos_hint: {"top": .8, "right":.9}
+                    on_text:     
+                        root.ids['ticker_error'].text = ""
+                        root.ids['submit_error'].text = ""                        
+                Label:
+                    size_hint: .8, .1
+                    pos_hint: {"top": .7, "right":.9}             
+                    id: ticker_error
+                    bold: True
+                    markup: True
+                    halign: "center"
+                    valigh: "middle"
+                    size_hiny_y: None             
+                    text_size: self.width, None
+                    height: self.texture_size[1]                
+                TextInput:
+                    id: price
+                    hint_text: "Enter Price"
+                    size_hint: .8, .1
+                    write_tab: False
+                    pos_hint: {"top": .6, "right":.9} 
+                    on_text:     
+                        root.ids['price_error'].text = "" 
+                        root.ids['submit_error'].text = ""                                     
+                Label:
+                    size_hint: .8, .1
+                    pos_hint: {"top": .5, "right":.9}             
+                    id: price_error
+                    bold: True
+                    markup: True
+                    halign: "center"
+                    valigh: "middle"
+                    size_hiny_y: None              
+                    text_size: self.width, None
+                    height: self.texture_size[1]                                                    
+                TextInput:
+                    id: qty
+                    hint_text: "Enter Quantity"
+                    size_hint: .8, .1
+                    write_tab: False                    
+                    pos_hint: {"top": .4, "right":.9}       
+                    on_text:     
+                        root.ids['qty_error'].text = ""
+                        root.ids['submit_error'].text = ""                                      
+                Label:
+                    size_hint: .8, .1
+                    pos_hint: {"top": .3, "right":.9}             
+                    id: qty_error
+                    bold: True
+                    markup: True
+                    halign: "center"
+                    valigh: "middle"
+                    size_hiny_y: None              
+                    text_size: self.width, None
+                    height: self.texture_size[1]                                                  
+            FloatLayout:  
+                Button:
+                    id: buy_add     
+                    text: "Buy"
+                    size_hint: .8, .1
+                    pos_hint: {"top": .75, "right":.9}                           
+                    on_release:
+                        app.direction = "buy"
+                        self.background_color = (.03,.76,.95,1)
+                        root.ids['sell_add'].background_color = (1,1,1,.5)
+                        root.ids['submit_error'].text = ""   
+                        root.ids['direction_error'].text = ""                           
+                Label:
+                    size_hint: .8, .1
+                    pos_hint: {"top": .6, "right":.9}             
+                    id: direction_error
+                    bold: True
+                    markup: True
+                    halign: "center"
+                    valigh: "middle"
+                    size_hiny_y: None             
+                    text_size: self.width, None
+                    height: self.texture_size[1]     
+                Button:
+                    id: sell_add
+                    text: "Sell"   
+                    size_hint: .8, .1
+                    pos_hint: {"top": .45, "right":.9}                                                       
+                    on_release:
+                        app.direction = "sell"
+                        self.background_color = (.03,.76,.95,1)
+                        root.ids['buy_add'].background_color = (1,1,1,.5)   
+                        root.ids['submit_error'].text = ""   
+                        root.ids['direction_error'].text = ""                    
+
+                  
+                

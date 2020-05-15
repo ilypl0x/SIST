@@ -1,0 +1,129 @@
+#:import utils kivy.utils
+
+<HomeScreen>:
+    FloatLayout:
+        canvas:
+            Color:
+                rgb: utils.get_color_from_hex("#000000")
+            Rectangle:
+                size: self.size
+                pos: self.pos    
+        GridLayout:
+            rows:1
+            pos_hint: {"top": 1}
+            size_hint: 1, .2     
+            GridLayout:
+                rows: 2
+                Label:
+                    id: pnl_label
+                    bold: True
+                    markup: True
+                    font_size: 22
+                    halign: "center"
+                    valigh: "middle"
+                    size_hiny_y: None
+                    text_size: self.width, None
+                    height: self.texture_size[1]                    
+                Label:
+                    bold: True
+                    markup: True  
+                    font_size: 22                       
+                    halign: "center"                               
+                    id: percent_label
+                    size_hiny_y: None
+                    valigh: "middle"
+                    text_size: self.width, None
+                    height: self.texture_size[1]                    
+            GridLayout:
+                rows: 2                                       
+                Label:
+                    bold: True
+                    markup: True    
+                    halign: "center"                                
+                    id: totalinvest_label
+                    size_hiny_y: None
+                    text_size: self.width, None
+                    height: self.texture_size[1]  
+                Label:
+                    bold: True
+                    markup: True  
+                    halign: "center"              
+                    id: asof_label
+                    size_hiny_y: None
+                    text_size: self.width, None
+                    height: self.texture_size[1]                                
+            FloatLayout:    
+                rows: 3
+                ImageButton:
+                    pos_hint: {"top":1, "right": .8}   
+                    size_hint: (.3,.33)             
+                    source: "icons/refresh.png"
+                    on_release: app.update()
+                ImageButton:
+                    pos_hint: {"top":.63, "right":.8}   
+                    size_hint: (.3,.25)                    
+                    source: "icons/add.png"
+                    on_release: app.change_screen("input_screen")
+                ImageButton:
+                    pos_hint: {"top":.33, "right": .8}   
+                    size_hint: (.3,.31)                    
+                    source: "icons/settings.png"
+                    on_release: app.change_screen("settings_screen")                                         
+
+        GridLayout:
+            rows: 1
+            pos_hint: {"top": .8, "left": 1}
+            size_hint: 1, .05        
+            Label:
+                text: "Ticker"
+                bold: True
+                markup: True
+                halign: "center"
+                valigh: "middle"
+                size_hiny_y: None
+                font_size: 12                 
+                text_size: self.width, None
+                height: self.texture_size[1]                
+            Label:
+                text: "Purchase Px"
+                bold: True
+                markup: True
+                halign: "center"
+                valigh: "middle"
+                size_hiny_y: None
+                font_size: 12                    
+                text_size: self.width, None
+                height: self.texture_size[1]                      
+            Label:
+                text: "Current Px"
+                bold: True
+                markup: True
+                halign: "center"
+                valigh: "middle"
+                font_size: 12                    
+                size_hiny_y: None
+                text_size: self.width, None
+                height: self.texture_size[1]                      
+            Label:
+                text: "% Chg"                                                
+                bold: True
+                markup: True
+                halign: "center"
+                valigh: "middle"
+                font_size: 12                    
+                size_hiny_y: None
+                text_size: self.width, None
+                height: self.texture_size[1]                      
+               
+        ScrollView:   
+            pos_hint: {"top": .75, "left": 1}
+            size_hint: 1, .75                        
+            GridLayout:
+                cols: 1
+                id: detail_grid
+                size_hint_y: None
+                spacing: 5,5
+                height: self.minimum_height
+                row_default_height: '50dp'
+                row_force_default: True
+                                        
