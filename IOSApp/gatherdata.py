@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from lxml import html
+#from lxml import html
 import requests
 import json
 
