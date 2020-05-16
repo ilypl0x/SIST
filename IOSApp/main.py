@@ -13,6 +13,7 @@ from kivy.graphics import Rectangle, Color, Line
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.popup import Popup
 from kivy.uix.image import Image
+from kivy.utils import platform
 from kivy.uix.dropdown import DropDown
 import requests
 import json
@@ -50,10 +51,13 @@ kv = Builder.load_file("main.kv")
 class WindowsApp(App):
 
     refresh_token_file = "refresh_token.txt"
+    firebase = None
 
     def build(self):
         self.firebase = Firebase()
-        return kv
+        if platform == "ios":
+            self.refresh_token_file = App.get_running_app().user_data_dir + self.refresh_token_file
+        return Builder.load_file("main.kv")
 
     def on_start(self):
 
