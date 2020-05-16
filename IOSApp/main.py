@@ -88,7 +88,6 @@ class WindowsApp(App):
                 raw_data[stock]['price'].append(price)
                 raw_data[stock]['qty'].append(qty)
                 raw_data[stock]['total'] += qty
-
         for stock in raw_data:
             sum_of_price = 0
             for i in range(len(raw_data[stock]['price'])):
@@ -124,24 +123,19 @@ class WindowsApp(App):
             total_dict['total']['orig_total'] += raw_data[ticker]['orig_total']
             total_dict['total']['new_total'] += raw_data[ticker]['new_total']
             total_dict['total']['close'] = close    
-
         with concurrent.futures.ThreadPoolExecutor() as executor:
                 [executor.submit(vwap_edit,ticker) for ticker in ticker_list]
-
         total_dict['total']['pnl'] = total_dict['total']['new_total'] - total_dict['total']['orig_total']
         total_dict['total']['percent'] = calc_percent(total_dict['total']['new_total'],total_dict['total']['orig_total'])
         total_dict['total']['new_total'] = float_to_money(total_dict['total']['new_total'])
         total_dict['total']['orig_total'] = float_to_money(total_dict['total']['orig_total'])
-
         return total_dict,raw_data            
         
     def update(self):
 
         total_dict, final_data = self.convert_to_dict()
-
         post_request = requests.patch("https://investmentsummary-94034.firebaseio.com/%s.json?auth=%s" %(self.local_id,self.id_token),
             data = json.dumps(total_dict))
-
         #Update total pnl for portfolio
         pnl_label = self.root.ids['home_screen'].ids['pnl_label']
         if total_dict['total']['pnl'] > 0:

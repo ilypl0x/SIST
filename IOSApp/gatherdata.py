@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-#from lxml import html
+import html5lib
 import requests
 import json
 
@@ -30,7 +30,7 @@ def get_ticker_price(ticker):
 
     url = 'https://in.finance.yahoo.com/quote/' + ticker
     html_page = requests.get(url).content
-    soup = BeautifulSoup(html_page, 'lxml')
+    soup = BeautifulSoup(html_page, 'html5lib')
     price_location = soup.find("div", attrs={"id":"Col1-2-QuoteHeader-Proxy"})
 
     close = price_location.select(close_code)[0].text

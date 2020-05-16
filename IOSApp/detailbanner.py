@@ -20,23 +20,23 @@ class DetailBanner(GridLayout):
 
         left = FloatLayout()
         # left_image = Image(source='icons/' + kwargs['image'], size_hint= (1, 0.8), pos_hint={"top": 1, "left": 1})
-        left_label = Label(text=kwargs['ticker'], color=(0,0,0,1),markup=True,  bold=True, font_size=25,size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
+        left_label = Label(text=kwargs['ticker'], color=(0,0,0,1),markup=True,  bold=True, font_size=50,size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
         # left.add_widget(left_image)
         left.add_widget(left_label)
 
 
         middle1 = FloatLayout()
-        middle1_label = Label(text='${:,.2f}'.format(kwargs['purchase_price']), color=(0,0,0,1),markup=True,font_size=19, bold=True, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
+        middle1_label = Label(text='${:,.2f}'.format(kwargs['purchase_price']), color=(0,0,0,1),markup=True,font_size=35, bold=True, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
         middle1.add_widget(middle1_label)
 
 
         middle2 = FloatLayout()
-        middle2_label = Label(text='${:,.2f}'.format(kwargs['curr_price']), color=(0,0,0,1),markup=True,font_size=19,  bold=True, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
+        middle2_label = Label(text='${:,.2f}'.format(kwargs['curr_price']), color=(0,0,0,1),markup=True,font_size=35,  bold=True, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
         middle2.add_widget(middle2_label)
 
 
         right = FloatLayout()
-        right_label = Label(text=str(kwargs['percent']), color=(0,0,0,1),markup=True,  bold=True,font_size=19, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
+        right_label = Label(text=str(kwargs['percent']), color=(0,0,0,1),markup=True,  bold=True,font_size=35, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
         right.add_widget(right_label)
 
 
