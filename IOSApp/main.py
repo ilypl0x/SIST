@@ -63,7 +63,7 @@ class WindowsApp(App):
 
         try:
             #Try to read the persisting sign in credentials
-            with open("refresh_token.txt", 'r') as f:
+            with open(self.refresh_token_file, 'r') as f:
                 refresh_token = f.read()
 
             self.id_token, self.local_id = self.firebase.exchange_refresh_token(refresh_token)
