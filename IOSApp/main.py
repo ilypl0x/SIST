@@ -49,6 +49,8 @@ kv = Builder.load_file("main.kv")
 
 class WindowsApp(App):
 
+    refresh_token_file = "refresh_token.txt"
+
     def build(self):
         self.firebase = Firebase()
         return kv

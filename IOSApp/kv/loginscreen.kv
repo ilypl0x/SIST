@@ -1,7 +1,7 @@
 <LoginScreen>:
     canvas:
         Color:
-            rgb: utils.get_color_from_hex("#D690F7")
+            rgb: utils.get_color_from_hex("#524bb3")
         Rectangle:
             size: self.size
             pos: self.pos
@@ -9,12 +9,14 @@
         TextInput:
             id: login_email
             hint_text: "email"
+            write_tab: False    
             size_hint: .8, .1
             pos_hint: {"top": .9, "right":.9}    
         TextInput:
             id: login_password
             password: True
             hint_text: "password"
+            write_tab: False                
             size_hint: .8, .1
             pos_hint: {"top": .7, "right":.9}    
         Label:
@@ -29,10 +31,9 @@
                 Rectangle:
                     size: self.size
                     pos: self.pos                
-            text: "[u]Sign Up![/u]"
+            text: "[u]Sign In/Sign Up![/u]"
             markup: True
             size_hint: .8, .1
             pos_hint: {"top": .2, "right":.9}    
             on_release:
-                app.firebase.sign_up(login_email.text, login_password.text)
-                print("singed up", login_email.text, login_password.text)            
+                app.firebase.sign_up(login_email.text, login_password.text)           
