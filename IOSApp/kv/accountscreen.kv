@@ -1,0 +1,52 @@
+
+<AccountScreen>:
+    FloatLayout:
+        FloatLayout:  
+            pos_hint: {"top":1}
+            size_hint: (1,.1)    
+            ImageButton:
+                pos_hint: {"top":1, "x":-.37}
+                source: "icons/back.png"     
+                on_release: 
+                    app.update()
+                    app.change_screen('home_screen')  
+
+            Label:
+                text: "Settings"
+                pos_hint: {"top":1}
+                bold: True
+                markup: True
+                halign: "center"
+                valigh: "middle"
+                size_hiny_y: None
+                font_size: 50                 
+                text_size: self.width, None
+                height: self.texture_size[1]                    
+        FloatLayout:
+            pos_hint: {"top":.9} #start at .9 TOP of the total screen
+            size_hint: (1,.9) #width and height of the whole float layout     
+            Button:
+                text: "Account"
+                pos_hint: {"top":1,"x":.15}
+                size_hint: (.7,.18)  #width,height of button                
+                on_release: app.change_screen('home_screen')   
+            Button:
+                text: "Activity"
+                pos_hint: {"top":.8,"x":.15}
+                size_hint: (.7,.18)  #width,height of button             
+                on_release: app.change_screen('home_screen')   
+            Button:
+                text: "Auto Refresh"
+                pos_hint: {"top":.6,"x":.15}
+                size_hint: (.7,.18)  #width,height of button      
+                on_release: app.change_screen('home_screen')   
+            Button:
+                text: "Color"
+                pos_hint: {"top":.4,"x":.15}
+                size_hint: (.7,.18)  #width,height of button 
+                on_release: app.change_screen('home_screen')   
+            Button:
+                text: "Help"
+                pos_hint: {"top":.2,"x":.15}
+                size_hint: (.7,.18)  #width,height of button          
+                on_release: app.change_screen('home_screen')                                                                                              

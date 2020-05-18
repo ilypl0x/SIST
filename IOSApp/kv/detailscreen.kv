@@ -1,0 +1,97 @@
+#:import utils kivy.utils
+
+<DetailScreen>:
+    FloatLayout:
+        canvas:
+            Color:
+                rgb: utils.get_color_from_hex("#000000")
+            Rectangle:
+                size: self.size
+                pos: self.pos    
+        FloatLayout:
+            pos_hint: {"top": 1,"left":1}
+            size_hint: 1, .20              
+            ImageButton:
+                source: "icons/back.png"
+                size_hint: (1,.4)
+                pos_hint: {"top":.95,"x":-.4}
+                on_release:
+                    app.blank_input_fields()
+                    app.change_screen("home_screen")  
+                    app.update()  
+            GridLayout:
+                rows:2
+                size_hint: (1,1)
+                pos_hint: {"top":1}  
+                Label:
+                    bold: True
+                    markup: True  
+                    halign: "center"              
+                    id: ticker_detail
+                    font_size: 40   
+                    size_hiny_y: None
+                    text_size: self.width, None
+                    height: self.texture_size[1]     
+                Label:
+                    bold: True
+                    markup: True  
+                    halign: "center"              
+                    id: ticker_name_detail
+                    font_size: 40   
+                    size_hiny_y: None
+                    text_size: self.width, None
+                    height: self.texture_size[1]                            
+            ImageButton:
+                id: add_button
+                size_hint: (1,.4)
+                pos_hint: {"top":.95,"x":.4}                
+                source: "icons/add.png"
+                on_release:    
+                    app.change_screen("input_screen")        
+        GridLayout:
+            rows: 1
+            pos_hint: {"top": .8, "left": 1}
+            size_hint: 1, .05        
+            Label:
+                text: "Type"
+                bold: True
+                markup: True
+                halign: "center"
+                valigh: "middle"
+                size_hiny_y: None
+                font_size: 30                 
+                text_size: self.width, None
+                height: self.texture_size[1]                
+            Label:
+                text: "Quantity"
+                bold: True
+                markup: True
+                halign: "center"
+                valigh: "middle"
+                size_hiny_y: None
+                font_size: 30                  
+                text_size: self.width, None
+                height: self.texture_size[1]                      
+            Label:
+                text: "Price"
+                bold: True
+                markup: True
+                halign: "center"
+                valigh: "middle"
+                font_size: 30                   
+                size_hiny_y: None
+                text_size: self.width, None
+                height: self.texture_size[1]                                         
+               
+        ScrollView:   
+            pos_hint: {"top": .75, "left": 1}
+            size_hint: 1, .75                        
+            GridLayout:
+                cols: 1
+                id: detail_grid
+                size_hint_y: None
+                spacing: 5,5
+                height: self.minimum_height
+                row_default_height: '50dp'
+                row_force_default: True
+                                        

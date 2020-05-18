@@ -20,13 +20,16 @@ import json
 import re
 import concurrent.futures
 from firebase import Firebase
-from detailbanner import DetailBanner
+from detailbanner import SummaryBanner,DetailBanner,HistoryBanner
 from gatherdata import get_symbol,get_ticker_price
 
 class HomeScreen(Screen):
     pass
 
 class ImageButton(ButtonBehavior, Image):
+    pass
+
+class GridButton(ButtonBehavior, GridLayout):
     pass
 
 class LabelButton(ButtonBehavior, Label):
@@ -39,6 +42,15 @@ class LoginScreen(Screen):
     pass
 
 class InputScreen(Screen):
+    pass
+
+class DetailScreen(Screen):
+    pass
+
+class AccountScreen(Screen):
+    pass
+
+class HistoryScreen(Screen):
     pass
 
 class SetPopup(Popup):
@@ -75,32 +87,33 @@ class WindowsApp(App):
             pass
             
     def convert_to_dict(self):
+
+        data = self.firebase.getData()
         raw_data = {}
-        result = requests.get("https://investmentsummary-94034.firebaseio.com/%s.json?auth=%s" % (self.local_id, self.id_token))
-        data = json.loads(result.content.decode())
-        buy_keys = data['buy'].keys()
-        buy = data['buy']
-        for buy_key in buy_keys:
-            stock_purchase = buy[buy_key]
-            vwap = 0
-            stock = stock_purchase["ticker"]; price = float(stock_purchase["price"]); qty=int(stock_purchase["qty"])
-            if stock not in raw_data.keys():
-                raw_data[stock] = {'price': [price] ,
-                                    'qty': [qty],
-                                    'total': qty,
-                                    'vwap' : vwap
-                                    }
-            else:
-                raw_data[stock]['price'].append(price)
-                raw_data[stock]['qty'].append(qty)
-                raw_data[stock]['total'] += qty
+        
+        for stock,val in data.items():
+            if stock not in ("total","history"):
+                for entry,val2 in val.items():
+                    if entry != "nextId":
+                        price = float(val2['price'])
+                        qty = int(val2['qty'])
+                        vwap = 0
+                        if val2['id'] == 1:
+                            raw_data[stock] = {'price': [price] ,
+                                                'qty': [qty],
+                                                'total': qty,
+                                                'vwap' : vwap
+                                                }
+                        else:
+                            raw_data[stock]['price'].append(price)
+                            raw_data[stock]['qty'].append(qty)
+                            raw_data[stock]['total'] += qty  
         for stock in raw_data:
             sum_of_price = 0
             for i in range(len(raw_data[stock]['price'])):
                 cost = raw_data[stock]['price'][i]*raw_data[stock]['qty'][i]
                 sum_of_price += cost
             raw_data[stock]['vwap'] = sum_of_price/raw_data[stock]['total']
-
         ticker_list  = raw_data.keys()
         total_dict  = {'total':
                             {'orig_total': 0,
@@ -137,9 +150,24 @@ class WindowsApp(App):
         total_dict['total']['orig_total'] = float_to_money(total_dict['total']['orig_total'])
         return total_dict,raw_data            
         
+
+    def show_ticker_details(self,ticker,curr_price):
+        data = self.firebase.getTickerData(ticker)
+        detail_screen_ids = self.root.ids['detail_screen']
+        detail_grid = detail_screen_ids.ids['detail_grid']  
+        detail_grid.clear_widgets() 
+
+        detail_screen_ids.ids['ticker_detail'].text = ticker + " - " + curr_price
+        detail_screen_ids.ids['ticker_name_detail'].text = get_symbol(ticker)
+
+        for entry,val in data.items():
+            if isinstance(val,dict):
+                D = DetailBanner(direction=val['direction'].title(),identifier=val['id'],qty=val['qty'],price=val['price'])
+                detail_grid.add_widget(D)                             
+
     def update(self):
 
-        total_dict, final_data = self.convert_to_dict()
+        total_dict, self.final_data = self.convert_to_dict()
         post_request = requests.patch("https://investmentsummary-94034.firebaseio.com/%s.json?auth=%s" %(self.local_id,self.id_token),
             data = json.dumps(total_dict))
         #Update total pnl for portfolio
@@ -165,11 +193,12 @@ class WindowsApp(App):
         totalinvest_label = self.root.ids['home_screen'].ids['totalinvest_label']
         totalinvest_label.text = "Total Invested: \n" + total_dict['total']['orig_total']     
 
-        detail_grid = self.root.ids['home_screen'].ids['detail_grid']  
-        detail_grid.clear_widgets()  
-        for k,v in final_data.items():
-            W = DetailBanner(ticker=k,purchase_price=v['vwap'],curr_price=v['curr_price'],percent=v['percent'])
-            detail_grid.add_widget(W)
+        summary_grid = self.root.ids['home_screen'].ids['summary_grid']  
+        summary_grid.clear_widgets()  
+        for k,v in self.final_data.items():
+            S = SummaryBanner(ticker=k,purchase_price=v['vwap'],curr_price=v['curr_price'],percent=v['percent'])
+            summary_grid.add_widget(S)
+
 
     def change_screen(self, screen_name):
         #get the screen manager from the kv file
@@ -180,7 +209,11 @@ class WindowsApp(App):
         if screen_name == 'settings_screen':
             screen_manager.transition.direction = "left"  
         if screen_name == 'input_screen':
-            screen_manager.transition.direction = "left"                
+            screen_manager.transition.direction = "left"   
+        if screen_name == 'detail_screen':
+            screen_manager.transition.direction = "left" 
+        if screen_name == 'history_screen':
+            screen_manager.transition.direction = "left"                            
         screen_manager.current = screen_name
 
     def blank_input_fields(self):
@@ -188,6 +221,7 @@ class WindowsApp(App):
         transaction_ids['price'].text = ""
         transaction_ids['qty'].text = ""
         transaction_ids['ticker'].text = ""
+        transaction_ids['ticker_name'].text = ""
 
     def show_popup(self):
 
@@ -242,17 +276,21 @@ class WindowsApp(App):
             popupwindow.ids['confirm_label'].text = self.confirm_add
             popupwindow.open()
 
-
     def add_transaction(self):
-                    
-        #if all data is okay, send the data to firebase real time database
-        my_data = { "ticker": self.ticker,
-                    "price": self.price,
-                    "qty":self.qty}
-        post_request = requests.post("https://investmentsummary-94034.firebaseio.com/%s/%s.json?auth=%s" %(self.local_id,self.direction,self.id_token),
-                        data = json.dumps(my_data))                          
-        pass
+        #add transaction to firebase db
+        self.firebase.add_detail(self.direction,self.price,self.qty,self.ticker)                       
+        pass 
 
+    def show_history(self):
+        data = self.firebase.getHistoryData()
+        history_screen_ids = self.root.ids['history_screen']
+        history_grid = history_screen_ids.ids['history_grid']  
+        history_grid.clear_widgets() 
+
+        for entry,val in data.items():
+            if isinstance(val,dict):
+                H = HistoryBanner(direction=val['direction'].title(),ticker=val['ticker'],qty=val['qty'],price=val['price'], timestamp=val['timestamp'])
+                history_grid.add_widget(H)                   
 
 if __name__ == "__main__":
     WindowsApp().run()

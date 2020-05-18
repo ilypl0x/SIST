@@ -1,10 +1,21 @@
 import requests
 import json
+import pyrebase
+from datetime import datetime
 from kivy.app import App
 
 class Firebase():
     def __init__(self):
-        self.wak = "AIzaSyD8izkrqW466gor_Hm5uRNWUxCIyXzlky4" #Web api key
+
+        config = {
+        "apiKey": "AIzaSyD8izkrqW466gor_Hm5uRNWUxCIyXzlky4",
+        "authDomain": "investmentsummary-94034.firebaseapp.com",
+        "databaseURL": "https://investmentsummary-94034.firebaseio.com/",
+        "storageBucket": "investmentsummary-94034.appspot.com" }
+
+        firebase = pyrebase.initialize_app(config)
+        self.db = firebase.database()
+        self.auth = firebase.auth()        
         self.app = App.get_running_app()
 
     def sign_up(self,email, password):
@@ -12,35 +23,29 @@ class Firebase():
         #firebase will return localid authtoken and refreshtoken
         email = email.replace("\n","")
         password = password.replace("\n","")        
-        signup_url = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=" + self.wak
-        signup_data = {"email": email, "password": password, "returnSecureToken": True}
-        sign_up_request = requests.post(signup_url, data = signup_data)
-        sign_up_data = json.loads(sign_up_request.content.decode())
 
-        if sign_up_request.ok == True:
+        try:
+            sign_up_data = self.auth.create_user_with_email_and_password(email, password)
             refresh_token = sign_up_data['refreshToken']
             localId = sign_up_data['localId']
             idToken = sign_up_data['idToken']
-            #create new key in database from localId
-            #save refresh token to a file
+            email = sign_up_data['email']
+
             with open(self.app.refresh_token_file, 'w') as f:
                 f.write(refresh_token)
 
             #save localid to a variable 
             self.app.local_id = localId
             self.app.id_token = idToken
+            self.app.email_address = email            
 
-            # my_data = { "buy": {"ticker":"","price":"","qty":""},"sell": {"ticker":"","price":"","qty":""},"total": {"percent": "", "pnl": ""} }
-            my_data = {"buy":"","sell":"","qty":""}
-
-            post_request = requests.patch("https://investmentsummary-94034.firebaseio.com/"+ localId + ".json?auth=" + idToken,
-                            data = json.dumps(my_data))
-
-            self.app.change_screen('home_screen')
-
-        if sign_up_request.ok == False:
-            error_data = json.loads(sign_up_request.content.decode())
-            error_message  = error_data["error"]['message']
+            my_data = {"buy":"","sell":"","history":""}
+            self.db.child(localId).set(my_data,idToken)      
+            self.app.change_screen('input_screen')
+        
+        except requests.HTTPError as e:
+            error_json = e.args[1]
+            error_message  = json.loads(error_json)["error"]['message']
             if error_message == "EMAIL_EXISTS":
                 self.sign_in_existing_user(email,password)
             else:
@@ -53,40 +58,84 @@ class Firebase():
 
     def sign_in_existing_user(self, email, password):
         """Called if a user tried to sign up and their email already existed."""
-        signin_url = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=" + self.wak
-        signin_payload = {"email": email, "password": password, "returnSecureToken": True}
-        signin_request = requests.post(signin_url, data=signin_payload)
-        sign_up_data = json.loads(signin_request.content.decode())
-        self.app = App.get_running_app()
-
-        if signin_request.ok == True:
+        try:
+            sign_up_data = self.auth.sign_in_with_email_and_password(email, password)
             refresh_token = sign_up_data['refreshToken']
             localId = sign_up_data['localId']
             idToken = sign_up_data['idToken']
+            email = sign_up_data['email']
             # Save refreshToken to a file
             with open(self.app.refresh_token_file, "w") as f:
                 f.write(refresh_token)
-
             # Save localId to a variable in main app class
             # Save idToken to a variable in main app class
             self.app.local_id = localId
             self.app.id_token = idToken
-
+            self.app.email_address = email
             # Create new key in database from localId
-            #self.friend_get_req = UrlRequest("https://friendly-fitness.firebaseio.com/next_friend_id.json?auth=" + idToken, on_success=self.on_friend_get_req_ok)
             self.app.on_start()
 
-        elif signin_request.ok == False:
-            error_data = json.loads(signin_request.content.decode())
-            error_message = error_data["error"]['message']
-            self.app.root.ids['login_screen'].ids['login_message'].text = "EMAIL EXISTS - " + error_message.replace("_", " ")        
+        except requests.HTTPError as e:
+            error_json = e.args[1]
+            error_message  = json.loads(error_json)["error"]['message']
+            self.app.root.ids['login_screen'].ids['login_message'].text ="EMAIL EXISTS - " + error_message.replace("_", " ")    
 
     def exchange_refresh_token(self, refresh_token):
-        refresh_url = 'https://securetoken.googleapis.com/v1/token?key=' + self.wak
-        refresh_payload = '{"grant_type": "refresh_token", "refresh_token": "%s"}' % refresh_token
-        refresh_req = requests.post(refresh_url, data = refresh_payload)
+        refresh_req = self.auth.refresh(refresh_token)
+        local_id = refresh_req['userId']
+        idToken = refresh_req['idToken']
 
-        local_id = refresh_req.json()['user_id']
-        id_token = refresh_req.json()['id_token']
+        return idToken, local_id
 
-        return id_token, local_id
+    def reset_password(self, email):
+        self.auth.send_password_reset_email(email) 
+        self.app.root.ids['account_screen'].ids['reset_message'].text = "Password Reset sent to: {}".format(email)
+
+    def add_to_history(self,direction, price, qty, ticker, identifier, method):
+
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        history_data = { "timestamp": now,
+                        "price": price,
+                        "qty": qty,
+                        "ticker": ticker,
+                        "method": method,
+                        "direction": direction,
+                        "id": identifier
+        }
+
+        self.db.child(self.app.local_id).child('history').push(history_data,self.app.id_token)
+
+
+    def add_detail(self, direction,price,qty,ticker):
+
+        a=self.db.child(self.app.local_id).child(ticker).get(self.app.id_token)
+        if a.val() == None:
+            my_data = { "price": price,
+                        "qty": qty,
+                        "direction": direction,
+                        "id": 1
+            }                  
+            self.db.child(self.app.local_id).child(ticker).set({"nextId": 2},self.app.id_token)
+            self.db.child(self.app.local_id).child(ticker).push(my_data,self.app.id_token)
+            identifier = 1
+            self.add_to_history(direction,price,qty,ticker,identifier,method="insert")
+        else:
+            currId = self.db.child(self.app.local_id).child(ticker).get(self.app.id_token).val()["nextId"]
+            nextId = currId + 1 
+            self.db.child(self.app.local_id).child(ticker).update({"nextId": nextId},self.app.id_token)
+            my_data = { "price": price,
+            "qty": qty,
+            "direction": direction,
+            "id": currId
+                }               
+            self.db.child(self.app.local_id).child(ticker).push(my_data,self.app.id_token)
+            self.add_to_history(direction,price,qty,ticker,currId,method="insert")       
+
+    def getData(self):
+        return self.db.child(self.app.local_id).get(self.app.id_token).val()
+
+    def getTickerData(self,ticker):
+        return self.db.child(self.app.local_id).child(ticker).get(self.app.id_token).val()
+
+    def getHistoryData(self):
+        return self.db.child(self.app.local_id).child('history').get(self.app.id_token).val()

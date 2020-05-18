@@ -2,6 +2,9 @@
 #:include kv/settingsscreen.kv
 #:include kv/loginscreen.kv
 #:include kv/inputscreen.kv
+#:include kv/detailscreen.kv
+#:include kv/accountscreen.kv
+#:include kv/historyscreen.kv
 
 GridLayout:
     cols: 1
@@ -18,4 +21,13 @@ GridLayout:
             id: settings_screen
         InputScreen:
             name: "input_screen"
-            id: input_screen       
+            id: input_screen   
+        DetailScreen:
+            name: "detail_screen"    
+            id: detail_screen
+        AccountScreen:
+            name: "account_screen"    
+            id: account_screen    
+        HistoryScreen:
+            name: "history_screen"    
+            id: history_screen                        
