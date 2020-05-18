@@ -20,7 +20,7 @@
                     app.change_screen("home_screen")  
                     app.update()  
             GridLayout:
-                rows:2
+                cols:1
                 size_hint: (1,1)
                 pos_hint: {"top":1}  
                 Label:
@@ -31,7 +31,16 @@
                     font_size: 40   
                     size_hiny_y: None
                     text_size: self.width, None
-                    height: self.texture_size[1]     
+                    height: self.texture_size[1]    
+                Label:
+                    bold: True
+                    markup: True  
+                    halign: "center"              
+                    id: total_qty
+                    font_size: 40   
+                    size_hiny_y: None
+                    text_size: self.width, None
+                    height: self.texture_size[1]   
                 Label:
                     bold: True
                     markup: True  
@@ -59,7 +68,7 @@
                 halign: "center"
                 valigh: "middle"
                 size_hiny_y: None
-                font_size: 30                 
+                font_size: 35                 
                 text_size: self.width, None
                 height: self.texture_size[1]                
             Label:
@@ -69,7 +78,7 @@
                 halign: "center"
                 valigh: "middle"
                 size_hiny_y: None
-                font_size: 30                  
+                font_size: 35                  
                 text_size: self.width, None
                 height: self.texture_size[1]                      
             Label:
@@ -78,7 +87,7 @@
                 markup: True
                 halign: "center"
                 valigh: "middle"
-                font_size: 30                   
+                font_size: 35                   
                 size_hiny_y: None
                 text_size: self.width, None
                 height: self.texture_size[1]                                         

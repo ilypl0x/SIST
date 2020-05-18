@@ -25,8 +25,8 @@
                     bold: True
                     markup: True  
                     halign: "center"              
-                    text: "Account Activity"
-                    font_size: 40   
+                    text: "Account History"
+                    font_size: 50   
                     size_hiny_y: None
                     text_size: self.width, None
                     height: self.texture_size[1]                             
@@ -41,7 +41,7 @@
                 halign: "center"
                 valigh: "middle"
                 size_hiny_y: None
-                font_size: 20                 
+                font_size: 35                 
                 text_size: self.width, None
                 height: self.texture_size[1]                
             Label:
@@ -51,7 +51,7 @@
                 halign: "center"
                 valigh: "middle"
                 size_hiny_y: None
-                font_size: 20                  
+                font_size: 35                  
                 text_size: self.width, None
                 height: self.texture_size[1]                      
             Label:
@@ -60,7 +60,7 @@
                 markup: True
                 halign: "center"
                 valigh: "middle"
-                font_size: 20                   
+                font_size: 35                   
                 size_hiny_y: None
                 text_size: self.width, None
                 height: self.texture_size[1]  
@@ -70,24 +70,24 @@
                 markup: True
                 halign: "center"
                 valigh: "middle"
-                font_size: 20                   
+                font_size: 35                   
                 size_hiny_y: None
                 text_size: self.width, None
                 height: self.texture_size[1]    
             Label:
-                text: "Time"
+                text: "Date"
                 bold: True
                 markup: True
                 halign: "center"
                 valigh: "middle"
-                font_size: 20                   
+                font_size: 35                   
                 size_hiny_y: None
                 text_size: self.width, None
                 height: self.texture_size[1]                                                                           
                
         ScrollView:   
-            pos_hint: {"top": .8, "left": 1}
-            size_hint: 1, .8                        
+            pos_hint: {"top": .85, "left": 1}
+            size_hint: 1, .85                        
             GridLayout:
                 cols: 1
                 id: history_grid

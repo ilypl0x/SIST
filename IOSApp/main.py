@@ -18,6 +18,7 @@ from kivy.uix.dropdown import DropDown
 import requests
 import json
 import re
+from datetime import datetime
 import concurrent.futures
 from firebase import Firebase
 from detailbanner import SummaryBanner,DetailBanner,HistoryBanner
@@ -159,11 +160,16 @@ class WindowsApp(App):
 
         detail_screen_ids.ids['ticker_detail'].text = ticker + " - " + curr_price
         detail_screen_ids.ids['ticker_name_detail'].text = get_symbol(ticker)
-
+        totalqty = 0
         for entry,val in data.items():
             if isinstance(val,dict):
                 D = DetailBanner(direction=val['direction'].title(),identifier=val['id'],qty=val['qty'],price=val['price'])
-                detail_grid.add_widget(D)                             
+                detail_grid.add_widget(D)  
+                if val['direction'] == "buy":
+                    totalqty += val['qty']
+                else:
+                    totalqty -= val['qty']
+        detail_screen_ids.ids['total_qty'].text = "Total Owned: " + str(totalqty)                        
 
     def update(self):
 
@@ -289,7 +295,8 @@ class WindowsApp(App):
 
         for entry,val in data.items():
             if isinstance(val,dict):
-                H = HistoryBanner(direction=val['direction'].title(),ticker=val['ticker'],qty=val['qty'],price=val['price'], timestamp=val['timestamp'])
+                timestamp = datetime.strptime(val['timestamp'], "%Y-%m-%d %H:%M:%S").strftime("%m-%d-%y")
+                H = HistoryBanner(direction=val['direction'].title(),ticker=val['ticker'],qty=val['qty'],price=val['price'], timestamp=timestamp)
                 history_grid.add_widget(H)                   
 
 if __name__ == "__main__":
