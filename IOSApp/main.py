@@ -97,10 +97,8 @@ class WindowsApp(App):
         raw_data = {}
         
         for stock,val in data.items():
-            print(stock, val)
             if stock not in ("total","history"):
                 for entry,val2 in val.items():
-                    print(entry,val2)
                     if entry != "nextId":
                         price = float(val2['price'])
                         qty = int(val2['qty'])
