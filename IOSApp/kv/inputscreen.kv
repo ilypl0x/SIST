@@ -12,7 +12,7 @@
             text: "Confirm"
             on_release:
                 root.dismiss()
-                app.add_transaction()
+                app.add_or_modify_transaction()
                 app.blank_input_fields()
             size_hint: 0.4, 0.2
             pos_hint: {"x":0, "top":.2}       
@@ -31,27 +31,39 @@
             size: self.size
             pos: self.pos
     FloatLayout:
-        FloatLayout:
+        GridLayout:
+            rows:1
             pos_hint: {"top": 1,"left":1}
-            size_hint: 1, .15              
+            size_hint: 1, .1    
+            AnchorLayout:
+                anchor_x: 'left'
+                ImageButton:
+                    width: 120
+                    size_hint_x: None
+                    source: "icons/back.png"
+                    on_release:
+                        app.blank_input_fields()                
+                        if app.prev_screen == 'detail_screen': app.show_ticker_details(app.detail_ticker)
+                        if app.prev_screen == 'home_screen': app.update()
+                        app.change_screen(app.prev_screen)  
             ImageButton:
-                source: "icons/back.png"
-                size_hint: (1,.4)
-                pos_hint: {"top":.95,"x":-.4}
+                source: "icons/home.png"
                 on_release:
                     app.blank_input_fields()
                     app.change_screen("home_screen")  
-                    app.update()                  
-            ImageButton:
-                id: save_button
-                size_hint: (1,.4)
-                pos_hint: {"top":.95,"x":.4}                
-                source: "icons/save.png"
-                on_release:    
-                    app.show_popup()         
+                    app.update()
+            AnchorLayout:
+                anchor_x: 'right'                 
+                ImageButton:
+                    width: 120
+                    size_hint_x: None                
+                    id: save_button             
+                    source: "icons/save.png"
+                    on_release:    
+                        app.show_popup()         
         Label:
-            size_hint: 1, .15
-            pos_hint: {"top": .85, "left":1}             
+            pos_hint: {"top": .85, "left":1}  
+            size_hint: 1, .10                       
             id: submit_error
             bold: True
             markup: True
@@ -62,12 +74,12 @@
             height: self.texture_size[1]          
         GridLayout:
             cols: 2
-            pos_hint: {"top": .70,"left":1}
-            size_hint: 1, .70
+            pos_hint: {"top": .75,"left":1}
+            size_hint: 1, .75
             FloatLayout:
                 Label:
                     size_hint: .8, .1
-                    pos_hint: {"top": .9, "right":.9}             
+                    pos_hint: {"top": 1, "right":.9}             
                     id: ticker_name
                     bold: True
                     markup: True
@@ -80,14 +92,17 @@
                     id: ticker
                     hint_text: "Enter Ticker"
                     size_hint: .8, .1
+                    multiline: False
                     write_tab: False                    
-                    pos_hint: {"top": .8, "right":.9}
+                    pos_hint: {"top": .9, "right":.9}
                     on_text:     
                         root.ids['ticker_error'].text = ""
-                        root.ids['submit_error'].text = ""                        
+                        root.ids['submit_error'].text = ""
+                    on_text_validate:
+                        app.populate_ticker_name()                        
                 Label:
                     size_hint: .8, .1
-                    pos_hint: {"top": .7, "right":.9}             
+                    pos_hint: {"top": .8, "right":.9}             
                     id: ticker_error
                     bold: True
                     markup: True
@@ -100,14 +115,15 @@
                     id: price
                     hint_text: "Enter Price"
                     size_hint: .8, .1
+                    multiline: False
                     write_tab: False
-                    pos_hint: {"top": .6, "right":.9} 
+                    pos_hint: {"top": .7, "right":.9} 
                     on_text:     
                         root.ids['price_error'].text = "" 
                         root.ids['submit_error'].text = ""                                     
                 Label:
                     size_hint: .8, .1
-                    pos_hint: {"top": .5, "right":.9}             
+                    pos_hint: {"top": .6, "right":.9}             
                     id: price_error
                     bold: True
                     markup: True
@@ -120,14 +136,15 @@
                     id: qty
                     hint_text: "Enter Quantity"
                     size_hint: .8, .1
-                    write_tab: False                    
-                    pos_hint: {"top": .4, "right":.9}       
+                    write_tab: False    
+                    multiline: False                
+                    pos_hint: {"top": .5, "right":.9}       
                     on_text:     
                         root.ids['qty_error'].text = ""
                         root.ids['submit_error'].text = ""                                      
                 Label:
                     size_hint: .8, .1
-                    pos_hint: {"top": .3, "right":.9}             
+                    pos_hint: {"top": .4, "right":.9}             
                     id: qty_error
                     bold: True
                     markup: True
@@ -141,7 +158,7 @@
                     id: buy_add     
                     text: "Buy"
                     size_hint: .8, .1
-                    pos_hint: {"top": .75, "right":.9}                           
+                    pos_hint: {"top": .8, "right":.9}                           
                     on_release:
                         app.direction = "buy"
                         self.background_color = (.03,.76,.95,1)
@@ -150,7 +167,7 @@
                         root.ids['direction_error'].text = ""                           
                 Label:
                     size_hint: .8, .1
-                    pos_hint: {"top": .6, "right":.9}             
+                    pos_hint: {"top": .7, "right":.9}             
                     id: direction_error
                     bold: True
                     markup: True
@@ -163,7 +180,7 @@
                     id: sell_add
                     text: "Sell"   
                     size_hint: .8, .1
-                    pos_hint: {"top": .45, "right":.9}                                                       
+                    pos_hint: {"top": .6, "right":.9}                                                       
                     on_release:
                         app.direction = "sell"
                         self.background_color = (.03,.76,.95,1)

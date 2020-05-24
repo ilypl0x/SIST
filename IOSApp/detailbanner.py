@@ -58,13 +58,19 @@ class SummaryBanner(ButtonBehavior, GridLayout):
 
     def show_ticker_details(self, *args):
         self.app.change_screen('detail_screen')
-        self.app.show_ticker_details(self.ticker,self.curr_price)
+        self.app.show_ticker_details(self.ticker)
 
 
-class DetailBanner(GridLayout):
+
+class DetailBanner(ButtonBehavior, GridLayout):
 
     def __init__(self, **kwargs):
         self.rows = 1
+        self.app = App.get_running_app()     
+        self.prc = kwargs['price']
+        self.qty = kwargs['qty']
+        self.direction = kwargs['direction']   
+        self.entry = kwargs['entry']
         super(DetailBanner, self).__init__()
         self.identifier = kwargs['identifier']
         with self.canvas.before:
@@ -90,11 +96,20 @@ class DetailBanner(GridLayout):
 
         self.add_widget(left)
         self.add_widget(middle1) 
-        self.add_widget(middle2)               
+        self.add_widget(middle2)       
+        self.bind(on_release=self.show_modify_delete_option)                
 
     def update_rect(self, *args):
         self.rect.pos = self.pos
-        self.rect.size = self.size        
+        self.rect.size = self.size      
+
+    def show_modify_delete_option(self, *args):
+        self.app.show_delete_modify_popup()
+        self.app.temp_prc = self.prc
+        self.app.temp_qty = self.qty
+        self.app.temp_entry = self.entry
+        self.app.temp_dir = self.direction  
+        self.app.temp_id = self.identifier    
 
 
 class HistoryBanner(GridLayout):
@@ -102,39 +117,46 @@ class HistoryBanner(GridLayout):
     def __init__(self, **kwargs):
         self.rows = 1
         self.app = App.get_running_app()
+        self.method = kwargs['method']
         super(HistoryBanner, self).__init__()
         with self.canvas.before:
-            Color(rgb=(kivy.utils.get_color_from_hex("#F1F152")))            
-            # if kwargs['method'] == "insert":
-            #     Color(rgb=(kivy.utils.get_color_from_hex("#53C255")))
-            # elif kwargs['method'] == "modify":
-            #     Color(rgb=(kivy.utils.get_color_from_hex("#53C255")))
-            # else:
-            #     Color(rgb=(kivy.utils.get_color_from_hex("#CF1E15")))
-            self.rect = Rectangle(size=self.size, pos=self.pos)
-        self.bind(pos=self.update_rect, size=self.update_rect)
+            if self.method == 'insert':
+                rgb = rgb=(kivy.utils.get_color_from_hex("#66E683"))
+            elif self.method == 'modify':
+                rgb = (kivy.utils.get_color_from_hex("#FEB33E"))
+            else:
+                rgb = (kivy.utils.get_color_from_hex("#F18888"))
+                      
 
         left1 = FloatLayout()
-        left1_label = Label(text=kwargs['ticker'], color=(0,0,0,1),markup=True,  bold=True, font_size=50,size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
+        left1_label = Label(text=kwargs['ticker'], color=rgb,markup=True,  bold=True, font_size=40,size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
         left1.add_widget(left1_label)
 
         left2 = FloatLayout()
-        left2_label = Label(text=kwargs['direction'], color=(0,0,0,1),markup=True,  bold=True, font_size=50,size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
+        display_text = kwargs['direction']
+        # if self.method == 'modify':
+        #     display_text = kwargs['direction']+"(M)"
+        # elif self.method == 'delete':
+        #     display_text = kwargs['direction']+"(D)"
+        # else:
+        #     display_text = kwargs['direction']
+                    
+        left2_label = Label(text=display_text, color=rgb,markup=True,  bold=True, font_size=40,size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
         left2.add_widget(left2_label)
 
 
         middle1 = FloatLayout()
-        middle1_label = Label(text=str(kwargs['qty']), color=(0,0,0,1),markup=True,font_size=35, bold=True, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
+        middle1_label = Label(text=str(kwargs['qty']), color=rgb,markup=True,font_size=35, bold=True, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
         middle1.add_widget(middle1_label)
 
 
         middle2 = FloatLayout()
-        middle2_label = Label(text='${:,.2f}'.format(kwargs['price']), color=(0,0,0,1),markup=True,font_size=35,  bold=True, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
+        middle2_label = Label(text='${:,.2f}'.format(kwargs['price']), color=rgb,markup=True,font_size=35,  bold=True, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
         middle2.add_widget(middle2_label)
 
 
         right = FloatLayout()
-        right_label = Label(text=kwargs['timestamp'], color=(0,0,0,1),markup=True,  bold=True,font_size=35, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
+        right_label = Label(text=kwargs['timestamp'], color=rgb ,markup=True,  bold=True,font_size=35, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
         right.add_widget(right_label)
 
 
@@ -143,7 +165,3 @@ class HistoryBanner(GridLayout):
         self.add_widget(middle1) 
         self.add_widget(middle2)               
         self.add_widget(right)
-
-    def update_rect(self, *args):
-        self.rect.pos = self.pos
-        self.rect.size = self.size

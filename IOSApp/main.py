@@ -7,6 +7,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button, ButtonBehavior
 from kivy.uix.widget import Widget
 from kivy.properties import ObjectProperty
+from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Rectangle, Color, Line
@@ -57,7 +58,8 @@ class HistoryScreen(Screen):
 class SetPopup(Popup):
     pass
 
-
+class EditPopup(Popup):
+    pass
 
 kv = Builder.load_file("main.kv")
 
@@ -72,14 +74,16 @@ class WindowsApp(App):
             self.refresh_token_file = App.get_running_app().user_data_dir + self.refresh_token_file
         return Builder.load_file("main.kv")
 
+    def refresh_user(self):
+
+        with open(self.refresh_token_file, 'r') as f:
+            refresh_token = f.read()
+        self.id_token, self.local_id = self.firebase.exchange_refresh_token(refresh_token)        
+
     def on_start(self):
 
         try:
-            #Try to read the persisting sign in credentials
-            with open(self.refresh_token_file, 'r') as f:
-                refresh_token = f.read()
-
-            self.id_token, self.local_id = self.firebase.exchange_refresh_token(refresh_token)
+            # self.refresh_user()
             self.update()
             self.change_screen("home_screen")
 
@@ -99,7 +103,7 @@ class WindowsApp(App):
                         price = float(val2['price'])
                         qty = int(val2['qty'])
                         vwap = 0
-                        if val2['id'] == 1:
+                        if val2['id'] == 1 or len(val) == 2:
                             raw_data[stock] = {'price': [price] ,
                                                 'qty': [qty],
                                                 'total': qty,
@@ -119,7 +123,6 @@ class WindowsApp(App):
         total_dict  = {'total':
                             {'orig_total': 0,
                             'new_total': 0,
-                            'close': '',
                             'percent': 0,
                             'pnl': 0}
                             }           
@@ -133,16 +136,14 @@ class WindowsApp(App):
             return money
 
         def vwap_edit(ticker):
-            close,name, curr_price = get_ticker_price(ticker)
+            curr_price = get_ticker_price(ticker)
             raw_data[ticker]['curr_price'] = curr_price
-            raw_data[ticker]['name'] = name
             raw_data[ticker]['orig_total'] = raw_data[ticker]['total']* raw_data[ticker]['vwap']
             raw_data[ticker]['new_total'] = raw_data[ticker]['total']* raw_data[ticker]['curr_price']  
             raw_data[ticker]['percent'] = calc_percent(raw_data[ticker]['new_total'], raw_data[ticker]['orig_total'])
             
             total_dict['total']['orig_total'] += raw_data[ticker]['orig_total']
             total_dict['total']['new_total'] += raw_data[ticker]['new_total']
-            total_dict['total']['close'] = close    
         with concurrent.futures.ThreadPoolExecutor() as executor:
                 [executor.submit(vwap_edit,ticker) for ticker in ticker_list]
         total_dict['total']['pnl'] = total_dict['total']['new_total'] - total_dict['total']['orig_total']
@@ -152,26 +153,38 @@ class WindowsApp(App):
         return total_dict,raw_data            
         
 
-    def show_ticker_details(self,ticker,curr_price):
-        data = self.firebase.getTickerData(ticker)
-        detail_screen_ids = self.root.ids['detail_screen']
-        detail_grid = detail_screen_ids.ids['detail_grid']  
-        detail_grid.clear_widgets() 
+    def show_ticker_details(self,ticker):
+        try:
+            data = self.firebase.getTickerData(ticker)
+            detail_screen_ids = self.root.ids['detail_screen']
+            detail_grid = detail_screen_ids.ids['detail_grid']  
+            detail_grid.clear_widgets() 
 
-        detail_screen_ids.ids['ticker_detail'].text = ticker + " - " + curr_price
-        detail_screen_ids.ids['ticker_name_detail'].text = get_symbol(ticker)
-        totalqty = 0
-        for entry,val in data.items():
-            if isinstance(val,dict):
-                D = DetailBanner(direction=val['direction'].title(),identifier=val['id'],qty=val['qty'],price=val['price'])
-                detail_grid.add_widget(D)  
-                if val['direction'] == "buy":
-                    totalqty += val['qty']
-                else:
-                    totalqty -= val['qty']
-        detail_screen_ids.ids['total_qty'].text = "Total Owned: " + str(totalqty)                        
+            detail_screen_ids.ids['ticker_detail'].text = ticker
+            # detail_screen_ids.ids['ticker_detail'].text = ticker + " - " + curr_price
+            detail_screen_ids.ids['ticker_name_detail'].text = get_symbol(ticker)
+            totalqty = 0
+            #now I have the ticker information while on the page
+            self.detail_ticker = ticker
+            for entry,val in data.items():
+                if isinstance(val,dict):
+                    D = DetailBanner(direction=val['direction'].title(),identifier=val['id'],qty=val['qty'],price=val['price'],entry=entry)
+                    detail_grid.add_widget(D)  
+                    if val['direction'] == "buy":
+                        totalqty += val['qty']
+                    else:
+                        totalqty -= val['qty']
+            detail_screen_ids.ids['total_qty'].text = "Total Owned: " + str(totalqty)  
+        except:
+            self.change_screen('home_screen')
+            self.update()        
+         
+    def update_detail(self):
+        self.show_ticker_details(self.detail_ticker)
 
     def update(self):
+
+        self.refresh_user()
 
         total_dict, self.final_data = self.convert_to_dict()
         post_request = requests.patch("https://investmentsummary-94034.firebaseio.com/%s.json?auth=%s" %(self.local_id,self.id_token),
@@ -192,8 +205,7 @@ class WindowsApp(App):
 
         #Update last updated time 
         asof_label = self.root.ids['home_screen'].ids['asof_label']
-        raw_asof = total_dict['total']['close'].split('.')[0] 
-        asof_label.text =  "Updated: \n" + re.split(r'(^[^\d]+)',raw_asof)[-1]
+        asof_label.text = "Updated: \n" + datetime.now().strftime('%I:%M %p')
 
         #Update total invested 
         totalinvest_label = self.root.ids['home_screen'].ids['totalinvest_label']
@@ -209,7 +221,7 @@ class WindowsApp(App):
     def change_screen(self, screen_name):
         #get the screen manager from the kv file
         screen_manager = self.root.ids['screen_manager']
-
+        self.prev_screen = screen_manager.current
         if screen_name == 'home_screen':
             screen_manager.transition.direction = "right"
         if screen_name == 'settings_screen':
@@ -221,13 +233,35 @@ class WindowsApp(App):
         if screen_name == 'history_screen':
             screen_manager.transition.direction = "left"                            
         screen_manager.current = screen_name
+        self.curr_screen = screen_manager.current
 
     def blank_input_fields(self):
         transaction_ids = self.root.ids['input_screen'].ids
         transaction_ids['price'].text = ""
         transaction_ids['qty'].text = ""
         transaction_ids['ticker'].text = ""
+        transaction_ids['ticker'].readonly = False
         transaction_ids['ticker_name'].text = ""
+
+    def show_delete_modify_popup(self):
+        popupwindow = EditPopup()
+        popupwindow.open()
+
+    def on_delete(self):
+        self.firebase.removeData(self.detail_ticker,self.temp_entry)
+
+    def populate_ticker_name(self):
+        transaction_ids = self.root.ids['input_screen'].ids     
+        self.ticker = (transaction_ids['ticker'].text.strip()).upper() 
+        self.ticker_name = get_symbol(self.ticker)
+
+        if self.ticker_name == None:        
+            transaction_ids['ticker_error'].text = "[color=CF1E15]INVALID TICKER[/color]"
+            transaction_ids['submit_error'].text = "[color=CF1E15]FIX ERRORS BELOW[/color]"         
+            return 
+
+        transaction_ids['ticker_name'].text = self.ticker_name
+        return 
 
     def show_popup(self):
 
@@ -236,7 +270,7 @@ class WindowsApp(App):
         self.ticker = (transaction_ids['ticker'].text.strip()).upper()
         self.price = transaction_ids['price'].text
         self.qty = transaction_ids['qty'].text
-        self.ticker_name = get_symbol(self.ticker)        
+        # self.ticker_name = get_symbol(self.ticker)        
 
         try:
             self.direction
@@ -257,8 +291,8 @@ class WindowsApp(App):
             transaction_ids['ticker_error'].text = "[color=CF1E15]INVALID TICKER[/color]"
             transaction_ids['submit_error'].text = "[color=CF1E15]FIX ERRORS BELOW[/color]"             
             return
-        else:
-            transaction_ids['ticker_name'].text = self.ticker_name
+        # else:
+        #     transaction_ids['ticker_name'].text = self.ticker_name
         try:
             self.price = float(self.price)
         except:
@@ -282,10 +316,22 @@ class WindowsApp(App):
             popupwindow.ids['confirm_label'].text = self.confirm_add
             popupwindow.open()
 
-    def add_transaction(self):
-        #add transaction to firebase db
-        self.firebase.add_detail(self.direction,self.price,self.qty,self.ticker)                       
+    def add_or_modify_transaction(self):
+        if self.add_or_modify == "add":
+            #add transaction to firebase db
+            self.firebase.add_detail(self.direction,self.price,self.qty,self.ticker)                
+        else:
+            self.firebase.modifyData(self.detail_ticker,self.temp_entry, self.direction,self.price, self.qty, self.temp_id)       
         pass 
+
+    def fill_in_input(self,option):
+        transaction_ids = self.root.ids['input_screen'].ids
+        transaction_ids['ticker'].text = self.detail_ticker
+        transaction_ids['ticker'].readonly = True
+        transaction_ids['ticker_name'].text = get_symbol(self.detail_ticker)
+        if option == 'modify':
+            transaction_ids['price'].text = str(self.temp_prc)
+            transaction_ids['qty'].text = str(self.temp_qty) 
 
     def show_history(self):
         data = self.firebase.getHistoryData()
@@ -296,7 +342,7 @@ class WindowsApp(App):
         for entry,val in data.items():
             if isinstance(val,dict):
                 timestamp = datetime.strptime(val['timestamp'], "%Y-%m-%d %H:%M:%S").strftime("%m-%d-%y")
-                H = HistoryBanner(direction=val['direction'].title(),ticker=val['ticker'],qty=val['qty'],price=val['price'], timestamp=timestamp)
+                H = HistoryBanner(direction=val['direction'].title(),ticker=val['ticker'],qty=val['qty'],price=val['price'], method=val['method'],timestamp=timestamp)
                 history_grid.add_widget(H)                   
 
 if __name__ == "__main__":

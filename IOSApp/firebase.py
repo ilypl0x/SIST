@@ -139,3 +139,22 @@ class Firebase():
 
     def getHistoryData(self):
         return self.db.child(self.app.local_id).child('history').get(self.app.id_token).val()
+
+    def removeData(self,ticker,generatedId):
+        a = self.db.child(self.app.local_id).child(ticker).child(generatedId).get(self.app.id_token).val()
+        self.add_to_history(a['direction'],a['price'],a['qty'],ticker,a['id'],method="delete")
+
+        b = self.db.child(self.app.local_id).child(ticker).get(self.app.id_token).val()
+        if len(b) == 2:
+            return self.db.child(self.app.local_id).child(ticker).remove(self.app.id_token) 
+        else:
+            return self.db.child(self.app.local_id).child(ticker).child(generatedId).remove(self.app.id_token)
+
+    
+    def modifyData(self,ticker,generatedId, direction,price,qty,identifier):
+        my_data = { "price": price,
+        "qty": qty,
+        "direction": direction
+            }       
+        self.db.child(self.app.local_id).child(ticker).child(generatedId).update(my_data, self.app.id_token)
+        self.add_to_history(direction,price,qty,ticker, identifier, "modify")

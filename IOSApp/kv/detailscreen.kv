@@ -1,5 +1,27 @@
 #:import utils kivy.utils
 
+<EditPopup>:
+    title:"Edit"
+    size_hint: None,None
+    size: (250,250)
+    GridLayout:
+        rows: 2  
+        Button:         
+            text: "Modify"
+            on_release:
+                root.dismiss()
+                app.fill_in_input("modify") 
+                app.add_or_modify = "modify"                
+                app.change_screen('input_screen')
+
+        Button:         
+            text: "Delete"
+            on_release:  
+                app.on_delete()
+                app.show_ticker_details(app.detail_ticker)
+                root.dismiss() 
+
+
 <DetailScreen>:
     FloatLayout:
         canvas:
@@ -17,7 +39,7 @@
                 pos_hint: {"top":.95,"x":-.4}
                 on_release:
                     app.blank_input_fields()
-                    app.change_screen("home_screen")  
+                    app.change_screen('home_screen')  
                     app.update()  
             GridLayout:
                 cols:1
@@ -56,7 +78,9 @@
                 pos_hint: {"top":.95,"x":.4}                
                 source: "icons/add.png"
                 on_release:    
-                    app.change_screen("input_screen")        
+                    app.change_screen("input_screen") 
+                    app.fill_in_input("add")
+                    app.add_or_modify = "add"
         GridLayout:
             rows: 1
             pos_hint: {"top": .8, "left": 1}
