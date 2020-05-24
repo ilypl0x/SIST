@@ -97,13 +97,16 @@ class WindowsApp(App):
         raw_data = {}
         
         for stock,val in data.items():
+            print(stock, val)
             if stock not in ("total","history"):
                 for entry,val2 in val.items():
+                    print(entry,val2)
                     if entry != "nextId":
                         price = float(val2['price'])
                         qty = int(val2['qty'])
                         vwap = 0
-                        if val2['id'] == 1 or len(val) == 2:
+                        if stock not in raw_data.keys():
+                        # if val2['id'] == 1 or len(val) == 2:
                             raw_data[stock] = {'price': [price] ,
                                                 'qty': [qty],
                                                 'total': qty,
@@ -185,7 +188,6 @@ class WindowsApp(App):
     def update(self):
 
         self.refresh_user()
-
         total_dict, self.final_data = self.convert_to_dict()
         post_request = requests.patch("https://investmentsummary-94034.firebaseio.com/%s.json?auth=%s" %(self.local_id,self.id_token),
             data = json.dumps(total_dict))
