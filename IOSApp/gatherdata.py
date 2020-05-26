@@ -53,5 +53,50 @@ def get_symbol(symbol):
     except:
             return None
 
+class AlphaVantage():
+
+    def __init__(self):
+        self.apiKey = 'MKGNASVKLJ2I9C77'
+        self.url = "https://www.alphavantage.co/query"
+        self.payload = {"function": "TIME_SERIES_INTRADAY",
+                    "symbol": "",
+                    "interval": "1min",
+                    "apikey": self.apiKey}
+
+    def getStockPrice(self,symbol):
+
+        self.payload['symbol'] = symbol
+        av_api = json.loads(requests.get(self.url, params=self.payload).text)
+
+        all_value = av_api['Time Series (1min)'].values()
+        iter_value = iter(all_value)
+        first_value = next(iter_value)
+        close = float(first_value['4. close'])
+
+        return close
+        
+
+class FinnhubIO():
+
+    def __init__(self):
+        self.token = 'br65e2frh5rdamtp6r9g'
+        self.url = "https://finnhub.io/api/v1/quote"
+        self.payload = {"symbol": "",
+                    "token": self.token}
+
+    def getStockPrice(self,symbol):
+
+        self.payload['symbol'] = symbol
+        fio_api = json.loads(requests.get(self.url, params=self.payload).text)
+
+        close = float(fio_api['c'])
+
+        return close
+        
+
+
+
+
+
 # if __name__ in "__main__":
 #     print(get_ticker_price("JPM"))

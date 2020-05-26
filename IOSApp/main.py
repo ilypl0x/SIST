@@ -23,7 +23,7 @@ from datetime import datetime
 import concurrent.futures
 from firebase import Firebase
 from detailbanner import SummaryBanner,DetailBanner,HistoryBanner
-from gatherdata import get_symbol,get_ticker_price
+from gatherdata import get_symbol, FinnhubIO
 
 class HomeScreen(Screen):
     pass
@@ -137,7 +137,7 @@ class WindowsApp(App):
             return money
 
         def vwap_edit(ticker):
-            curr_price = get_ticker_price(ticker)
+            curr_price = FinnhubIO().getStockPrice(ticker)
             raw_data[ticker]['curr_price'] = curr_price
             raw_data[ticker]['orig_total'] = raw_data[ticker]['total']* raw_data[ticker]['vwap']
             raw_data[ticker]['new_total'] = raw_data[ticker]['total']* raw_data[ticker]['curr_price']  
