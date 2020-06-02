@@ -92,34 +92,23 @@ class WindowsApp(App):
             pass
             
     def convert_to_dict(self):
+        #do something that goes through and adds vwap and qty before data is fetched
 
         data = self.firebase.getData()
         raw_data = {}
         
         for stock,val in data.items():
             if stock not in ("total","history"):
-                for entry,val2 in val.items():
-                    if entry != "nextId":
-                        price = float(val2['price'])
-                        qty = int(val2['qty'])
-                        vwap = 0
-                        if stock not in raw_data.keys():
-                        # if val2['id'] == 1 or len(val) == 2:
-                            raw_data[stock] = {'price': [price] ,
-                                                'qty': [qty],
-                                                'total': qty,
-                                                'vwap' : vwap
-                                                }
-                        else:
-                            raw_data[stock]['price'].append(price)
-                            raw_data[stock]['qty'].append(qty)
-                            raw_data[stock]['total'] += qty  
-        for stock in raw_data:
-            sum_of_price = 0
-            for i in range(len(raw_data[stock]['price'])):
-                cost = raw_data[stock]['price'][i]*raw_data[stock]['qty'][i]
-                sum_of_price += cost
-            raw_data[stock]['vwap'] = sum_of_price/raw_data[stock]['total']
+                try:
+                    raw_data[stock] = {'total': val['qty'],
+                                        'vwap': val['vwap']}
+
+                except:
+                    self.calc_vwap_qty(stock) 
+                    raw_data[stock] = {'total': val['qty'],
+                                        'vwap': val['vwap']}
+                    pass
+
         ticker_list  = raw_data.keys()
         total_dict  = {'total':
                             {'orig_total': 0,
@@ -145,6 +134,8 @@ class WindowsApp(App):
             
             total_dict['total']['orig_total'] += raw_data[ticker]['orig_total']
             total_dict['total']['new_total'] += raw_data[ticker]['new_total']
+
+            
         with concurrent.futures.ThreadPoolExecutor() as executor:
                 [executor.submit(vwap_edit,ticker) for ticker in ticker_list]
         total_dict['total']['pnl'] = total_dict['total']['new_total'] - total_dict['total']['orig_total']
@@ -249,6 +240,7 @@ class WindowsApp(App):
 
     def on_delete(self):
         self.firebase.removeData(self.detail_ticker,self.temp_entry)
+        self.calc_vwap_qty(self.detail_ticker)
 
     def populate_ticker_name(self):
         transaction_ids = self.root.ids['input_screen'].ids     
@@ -319,10 +311,36 @@ class WindowsApp(App):
     def add_or_modify_transaction(self):
         if self.add_or_modify == "add":
             #add transaction to firebase db
-            self.firebase.add_detail(self.direction,self.price,self.qty,self.ticker)                
+            self.firebase.add_detail(self.direction,self.price,self.qty,self.ticker)   
+            self.calc_vwap_qty(self.ticker)             
         else:
-            self.firebase.modifyData(self.detail_ticker,self.temp_entry, self.direction,self.price, self.qty, self.temp_id)       
+            self.firebase.modifyData(self.detail_ticker,self.temp_entry, self.direction,self.price, self.qty, self.temp_id)      
+            self.calc_vwap_qty(self.detail_ticker) 
         pass 
+
+    def calc_vwap_qty(self,ticker):
+        all_data = self.firebase.getTickerData(ticker)
+        temp_vwap = 0
+        vwap_qty = {"qty": 0,
+                    "vwap": 0}
+        try:
+            for k,v in all_data.items():
+                if k not in ("nextId",'vwap','qty'):
+                    if v["direction"] == "buy":
+                        vwap_qty["qty"] += v["qty"]
+                        temp_vwap += (v["qty"]*v["price"])
+                    #put in what happens for sells
+            vwap_qty["vwap"] = temp_vwap/vwap_qty["qty"]
+            self.firebase.addVwapQty(ticker,vwap_qty)   
+
+        except:
+            print("ticker was deleted")
+            pass
+
+         
+
+
+
 
     def fill_in_input(self,option):
         transaction_ids = self.root.ids['input_screen'].ids
