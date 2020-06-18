@@ -21,8 +21,17 @@
             on_release:  
                 root.dismiss() 
             size_hint: 0.4, 0.2
-            pos_hint: {"right":1, "top":.2}                    
- 
+            pos_hint: {"right":1, "top":.2}    
+<EnterPopup>:
+    title:"Please Add Record"
+    size_hint: None,None
+    size: (600,600)
+    GridLayout:
+        cols: 1
+        Label:
+            id: please_add_label
+            text: "Please add a record then press 'Home' to proceed."
+
 <InputScreen>:
     canvas:
         Color:
@@ -43,9 +52,10 @@
                     source: "icons/back.png"
                     on_release:
                         app.blank_input_fields()                
-                        if app.prev_screen == 'detail_screen': app.show_ticker_details(app.detail_ticker)
-                        if app.prev_screen == 'home_screen': app.update()
-                        app.change_screen(app.prev_screen)  
+                        if app.prev_screen == 'detail_screen': app.show_ticker_details(app.detail_ticker); app.change_screen(app.prev_screen)
+                        if app.prev_screen == 'home_screen': app.update(); app.change_screen(app.prev_screen)
+                        if app.prev_screen == 'login_screen': app.show_enter_popup()
+                          
             ImageButton:
                 source: "icons/home.png"
                 on_release:

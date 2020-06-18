@@ -61,6 +61,9 @@ class SetPopup(Popup):
 class EditPopup(Popup):
     pass
 
+class EnterPopup(Popup):
+    pass
+
 kv = Builder.load_file("main.kv")
 
 class WindowsApp(App):
@@ -105,6 +108,7 @@ class WindowsApp(App):
 
                 except:
                     self.calc_vwap_qty(stock) 
+                    #need to re get data
                     raw_data[stock] = {'total': val['qty'],
                                         'vwap': val['vwap']}
                     pass
@@ -126,7 +130,10 @@ class WindowsApp(App):
             return money
 
         def vwap_edit(ticker):
-            curr_price = FinnhubIO().getStockPrice(ticker)
+            try:
+                curr_price = FinnhubIO().getStockPrice(ticker)
+            except:
+                curr_price = 0
             raw_data[ticker]['curr_price'] = curr_price
             raw_data[ticker]['orig_total'] = raw_data[ticker]['total']* raw_data[ticker]['vwap']
             raw_data[ticker]['new_total'] = raw_data[ticker]['total']* raw_data[ticker]['curr_price']  
@@ -135,11 +142,13 @@ class WindowsApp(App):
             total_dict['total']['orig_total'] += raw_data[ticker]['orig_total']
             total_dict['total']['new_total'] += raw_data[ticker]['new_total']
 
-            
         with concurrent.futures.ThreadPoolExecutor() as executor:
                 [executor.submit(vwap_edit,ticker) for ticker in ticker_list]
         total_dict['total']['pnl'] = total_dict['total']['new_total'] - total_dict['total']['orig_total']
-        total_dict['total']['percent'] = calc_percent(total_dict['total']['new_total'],total_dict['total']['orig_total'])
+        try:
+            total_dict['total']['percent'] = calc_percent(total_dict['total']['new_total'],total_dict['total']['orig_total'])
+        except:
+            total_dict['total']['percent'] = 0
         total_dict['total']['new_total'] = float_to_money(total_dict['total']['new_total'])
         total_dict['total']['orig_total'] = float_to_money(total_dict['total']['orig_total'])
         return total_dict,raw_data            
@@ -255,6 +264,11 @@ class WindowsApp(App):
         transaction_ids['ticker_name'].text = self.ticker_name
         return 
 
+    def show_enter_popup(self):
+        enterpopupwindow = EnterPopup()
+        #popupwindow.ids['confirm_label'].text = self.confirm_add
+        enterpopupwindow.open()        
+
     def show_popup(self):
 
         valid = True
@@ -336,11 +350,6 @@ class WindowsApp(App):
         except:
             print("ticker was deleted")
             pass
-
-         
-
-
-
 
     def fill_in_input(self,option):
         transaction_ids = self.root.ids['input_screen'].ids

@@ -14,13 +14,25 @@ class SummaryBanner(ButtonBehavior, GridLayout):
         self.rows = 1
         self.app = App.get_running_app()
         self.ticker = kwargs['ticker']
-        self.curr_price = '${:,.2f}'.format(kwargs['curr_price'])
+        if kwargs['curr_price'] == 0:
+            self.curr_price = 'N/A'
+        else:
+            self.curr_price = '${:,.2f}'.format(kwargs['curr_price'])
+
+        if kwargs['percent'] == -100.0:
+            self.percent = "N/A"
+        else:
+            self.percent = kwargs['percent']
+
         super(SummaryBanner, self).__init__()
         with self.canvas.before:
-            if kwargs['percent'] > 0:
-                Color(rgb=(kivy.utils.get_color_from_hex("#53C255")))
+            if isinstance(self.percent,float):
+                if kwargs['percent'] > 0:
+                    Color(rgb=(kivy.utils.get_color_from_hex("#53C255")))
+                else:
+                    Color(rgb=(kivy.utils.get_color_from_hex("#CF1E15")))
             else:
-                Color(rgb=(kivy.utils.get_color_from_hex("#CF1E15")))
+                Color(rgb=(kivy.utils.get_color_from_hex("#FFC04C")))
             self.rect = Rectangle(size=self.size, pos=self.pos)
         self.bind(pos=self.update_rect, size=self.update_rect)
 
@@ -37,12 +49,12 @@ class SummaryBanner(ButtonBehavior, GridLayout):
 
 
         middle2 = FloatLayout()
-        middle2_label = Label(text='${:,.2f}'.format(kwargs['curr_price']), color=(0,0,0,1),markup=True,font_size=35,  bold=True, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
+        middle2_label = Label(text=self.curr_price, color=(0,0,0,1),markup=True,font_size=35,  bold=True, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
         middle2.add_widget(middle2_label)
 
 
         right = FloatLayout()
-        right_label = Label(text=str(kwargs['percent']), color=(0,0,0,1),markup=True,  bold=True,font_size=35, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
+        right_label = Label(text=str(self.percent), color=(0,0,0,1),markup=True,  bold=True,font_size=35, size_hint=(1, 1), pos_hint={"top": 1, "right": 1})
         right.add_widget(right_label)
 
 

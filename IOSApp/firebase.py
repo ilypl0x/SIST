@@ -39,8 +39,9 @@ class Firebase():
             self.app.id_token = idToken
             self.app.email_address = email            
 
-            my_data = {"buy":"","sell":"","history":""}
-            self.db.child(localId).set(my_data,idToken)      
+            my_data = {"total": "","history":""}
+            self.db.child(localId).set(my_data,idToken)
+            self.app.add_or_modify = "add"      
             self.app.change_screen('input_screen')
         
         except requests.HTTPError as e:
@@ -109,7 +110,6 @@ class Firebase():
     def add_detail(self, direction,price,qty,ticker):
 
         a=self.db.child(self.app.local_id).child(ticker).get(self.app.id_token)
-        print(a)
         if a.val() == None:
             my_data = { "price": price,
                         "qty": qty,
